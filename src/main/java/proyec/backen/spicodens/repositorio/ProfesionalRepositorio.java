@@ -9,5 +9,8 @@ import proyec.backen.spicodens.modelo.Usuario;
 
 
 public interface ProfesionalRepositorio extends JpaRepository<Profesional, Long>{
+    boolean existsByUsuarioId(Long usuarioId);
+boolean existsByMatriculaProfesional(String matriculaProfesional);
+
 Optional<Profesional> findByUsuario(Usuario usuario);
 }

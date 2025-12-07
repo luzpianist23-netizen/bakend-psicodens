@@ -23,4 +23,10 @@ public class RecepcionistaControlador {
     public List<Recepcionista> listarRecepcionistas() {
         return recepcionistaRepositorio.findAll(Sort.by("id"));
     }
+
+       // Registrar recepcionista
+    @PostMapping
+    public Recepcionista registrarRecepcionista(@RequestBody Recepcionista recepcionista) {
+        return recepcionistaRepositorio.save(recepcionista);
+    }
 }

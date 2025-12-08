@@ -6,6 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import proyec.backen.spicodens.Dto.CitaDto;
+import proyec.backen.spicodens.Dto.CitaResponseDto;
+import proyec.backen.spicodens.Dto.PacienteDto;
+import proyec.backen.spicodens.Dto.PersonaDto;
+import proyec.backen.spicodens.Dto.ProfesionalDto;
+import proyec.backen.spicodens.Dto.RecepcionistaDto;
+import proyec.backen.spicodens.Dto.TratamientoResponseDto;
+import proyec.backen.spicodens.Dto.UsuarioDto;
 import proyec.backen.spicodens.modelo.Cita;
 import proyec.backen.spicodens.repositorio.CitaRepositorio;
 import proyec.backen.spicodens.repositorio.PacienteRepositorio;
@@ -92,12 +99,115 @@ public class CitaControlador {
     }
 
     @GetMapping
-    public ResponseEntity<List<CitaDto>> listar() {
-        List<CitaDto> lista = citaRepositorio.findAll()
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(lista);
+    public List<CitaResponseDto> listarCitas() {
+        return citaRepositorio.findAll().stream().map(cita -> {
+
+            CitaResponseDto dto = new CitaResponseDto();
+            dto.setId(cita.getId());
+            dto.setFecha(cita.getFecha());
+            dto.setHora(cita.getHora());
+            dto.setEstado(cita.getEstado());
+
+            // ----- Persona (si no es paciente)
+            if (cita.getPersona() != null) {
+                PersonaDto personaDto = new PersonaDto();
+                personaDto.setId(cita.getPersona().getId());
+                personaDto.setNombre(cita.getPersona().getNombre());
+                personaDto.setApellidoPaterno(cita.getPersona().getApellidoPaterno());
+                personaDto.setApellidoMaterno(cita.getPersona().getApellidoMaterno());
+                personaDto.setCedula(cita.getPersona().getCedula());
+                personaDto.setEmail(cita.getPersona().getEmail());
+                dto.setPersona(personaDto);
+            }
+
+            // ----- Paciente (si existe)
+            if (cita.getPaciente() != null) {
+                PacienteDto pacDto = new PacienteDto();
+                pacDto.setId(cita.getPaciente().getId());
+                pacDto.setTipoPaciente(cita.getPaciente().getTipoPaciente());
+
+                if (cita.getPaciente().getPersona() != null) {
+                    PersonaDto personaDto = new PersonaDto();
+                    personaDto.setId(cita.getPaciente().getPersona().getId());
+                    personaDto.setNombre(cita.getPaciente().getPersona().getNombre());
+                    personaDto.setApellidoPaterno(cita.getPaciente().getPersona().getApellidoPaterno());
+                    personaDto.setApellidoMaterno(cita.getPaciente().getPersona().getApellidoMaterno());
+                    personaDto.setCedula(cita.getPaciente().getPersona().getCedula());
+                    personaDto.setEmail(cita.getPaciente().getPersona().getEmail());
+                    pacDto.setPersona(personaDto);
+                }
+
+                dto.setPaciente(pacDto);
+            }
+
+            // ----- Tratamiento (opcional)
+            if (cita.getTratamiento() != null) {
+                TratamientoResponseDto tDto = new TratamientoResponseDto();
+                tDto.setId(cita.getTratamiento().getId());
+                tDto.setFechaInicio(cita.getTratamiento().getFechaInicio());
+                tDto.setFechaFin(cita.getTratamiento().getFechaFin());
+                tDto.setEstado(cita.getTratamiento().getEstado());
+                tDto.setObservaciones(cita.getTratamiento().getObservaciones());
+                dto.setTratamiento(tDto);
+            }
+
+            // ----- Profesional
+            ProfesionalDto profDto = new ProfesionalDto();
+            profDto.setId(cita.getProfesional().getId());
+            profDto.setMatriculaProfesional(cita.getProfesional().getMatriculaProfesional());
+            profDto.setDescripcion(cita.getProfesional().getDescripcion());
+            profDto.setActivo(cita.getProfesional().getActivo());
+
+            if (cita.getProfesional().getUsuario() != null) {
+                UsuarioDto uDto = new UsuarioDto();
+                uDto.setId(cita.getProfesional().getUsuario().getId());
+                uDto.setUsername(cita.getProfesional().getUsuario().getUsername());
+
+                if (cita.getProfesional().getUsuario().getPersona() != null) {
+                    PersonaDto pDto = new PersonaDto();
+                    pDto.setId(cita.getProfesional().getUsuario().getPersona().getId());
+                    pDto.setNombre(cita.getProfesional().getUsuario().getPersona().getNombre());
+                    pDto.setApellidoPaterno(cita.getProfesional().getUsuario().getPersona().getApellidoPaterno());
+                    pDto.setApellidoMaterno(cita.getProfesional().getUsuario().getPersona().getApellidoMaterno());
+                    pDto.setCedula(cita.getProfesional().getUsuario().getPersona().getCedula());
+                    pDto.setEmail(cita.getProfesional().getUsuario().getPersona().getEmail());
+                    uDto.setPersona(pDto);
+                }
+
+                profDto.setUsuario(uDto);
+            }
+
+            dto.setProfesional(profDto);
+
+            // ----- Recepcionista
+            RecepcionistaDto recepDto = new RecepcionistaDto();
+            recepDto.setId(cita.getRecepcionista().getId());
+            recepDto.setActivo(cita.getRecepcionista().getActivo());
+
+            if (cita.getRecepcionista().getUsuario() != null) {
+                UsuarioDto uDto = new UsuarioDto();
+                uDto.setId(cita.getRecepcionista().getUsuario().getId());
+                uDto.setUsername(cita.getRecepcionista().getUsuario().getUsername());
+
+                if (cita.getRecepcionista().getUsuario().getPersona() != null) {
+                    PersonaDto pd = new PersonaDto();
+                    pd.setId(cita.getRecepcionista().getUsuario().getPersona().getId());
+                    pd.setNombre(cita.getRecepcionista().getUsuario().getPersona().getNombre());
+                    pd.setApellidoPaterno(cita.getRecepcionista().getUsuario().getPersona().getApellidoPaterno());
+                    pd.setApellidoMaterno(cita.getRecepcionista().getUsuario().getPersona().getApellidoMaterno());
+                    pd.setCedula(cita.getRecepcionista().getUsuario().getPersona().getCedula());
+                    pd.setEmail(cita.getRecepcionista().getUsuario().getPersona().getEmail());
+                    uDto.setPersona(pd);
+                }
+
+                recepDto.setUsuario(uDto);
+            }
+
+            dto.setRecepcionista(recepDto);
+
+            return dto;
+
+        }).toList();
     }
 
     @GetMapping("/{id}")

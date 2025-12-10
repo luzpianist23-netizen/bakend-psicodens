@@ -1,6 +1,5 @@
 package proyec.backen.spicodens.controlador;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +13,10 @@ import proyec.backen.spicodens.Dto.RecepcionistaDto;
 import proyec.backen.spicodens.Dto.TratamientoResponseDto;
 import proyec.backen.spicodens.Dto.UsuarioDto;
 import proyec.backen.spicodens.modelo.Cita;
+
 import proyec.backen.spicodens.repositorio.CitaRepositorio;
 import proyec.backen.spicodens.repositorio.PacienteRepositorio;
+import proyec.backen.spicodens.repositorio.PersonasRepositorio;
 import proyec.backen.spicodens.repositorio.ProfesionalRepositorio;
 import proyec.backen.spicodens.repositorio.RecepcionistaRepositorio;
 import proyec.backen.spicodens.repositorio.TratamientoRepositorio;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/citas")
-@CrossOrigin("*")
 public class CitaControlador {
 
     @Autowired
@@ -36,6 +36,10 @@ public class CitaControlador {
 
     @Autowired
     private PacienteRepositorio pacienteRepositorio;
+
+    @Autowired
+private PersonasRepositorio personaRepositorio;
+
 
     @Autowired
     private ProfesionalRepositorio profesionalRepositorio;
@@ -48,8 +52,6 @@ public class CitaControlador {
 
     @Autowired
     private CitaServicio citaServicio;
-
-
 
     private CitaDto mapToDto(Cita c) {
         return new CitaDto(
@@ -76,8 +78,8 @@ public class CitaControlador {
         }
 
         if (dto.getPersonaId() != null) {
-            // setPersona() según tu entity
-            // si no existe, debes implementarlo
+            personaRepositorio.findById(dto.getPersonaId())
+            .ifPresent(c::setPersona);
         }
 
         if (dto.getProfesionalId() != null) {
@@ -98,6 +100,7 @@ public class CitaControlador {
         return c;
     }
 
+    // listar todas las citas
     @GetMapping
     public List<CitaResponseDto> listarCitas() {
         return citaRepositorio.findAll().stream().map(cita -> {
@@ -210,6 +213,7 @@ public class CitaControlador {
         }).toList();
     }
 
+    // citas por id
     @GetMapping("/{id}")
     public ResponseEntity<CitaDto> obtenerPorId(@PathVariable Long id) {
         return citaRepositorio.findById(id)
@@ -226,6 +230,7 @@ public class CitaControlador {
         return ResponseEntity.ok(lista);
     }
 
+    // registro de cita paciente
     @PostMapping
     public ResponseEntity<CitaDto> registrar(@RequestBody CitaDto dto) {
         Cita c = new Cita();
@@ -233,6 +238,7 @@ public class CitaControlador {
         c = citaRepositorio.save(c);
         return ResponseEntity.ok(mapToDto(c));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<CitaDto> modificar(@PathVariable Long id, @RequestBody CitaDto dto) {
